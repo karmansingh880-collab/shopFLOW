@@ -113,10 +113,14 @@ def checkout():
     return f"🎉 Order placed! Total paid: Rs. {total}. Thank you!", summary
 
 
-# ── Feature 4: Duplicate ID Finder ───────────────────────────
+# ── Feature 4: Duplicate ID Finder (SQL) ─────────────────────
 
 def find_duplicate(id_string):
-    """Called when user clicks 'Find Duplicate'."""
+    """Called when user clicks 'Find Duplicate'.
+
+    Uses SQL (GROUP BY / HAVING) to find the duplicate ID —
+    the same technique you'd use in a real database full of orders.
+    """
     try:
         id_list = list(map(int, id_string.strip().split()))
     except ValueError:
@@ -125,11 +129,16 @@ def find_duplicate(id_string):
     if len(id_list) < 2:
         return "❌ Enter at least 2 numbers."
 
-    dup = cart.find_duplicate_id(id_list)
+    dup = cart.find_duplicate_id_sql(id_list)
+
+    if dup is None:
+        return f"📋 IDs entered : {id_list}\n\n❌ No duplicate found."
+
     return (
-        f"📋 IDs entered : {id_list}\n"
-        f"🔍 Expected sum: {(len(id_list)-1)*len(id_list)//2}\n"
-        f"➕ Actual sum  : {sum(id_list)}\n"
+        f"📋 IDs entered : {id_list}\n\n"
+        f"🗃️ SQL Query used:\n"
+        f"   SELECT order_id, COUNT(*) FROM orders\n"
+        f"   GROUP BY order_id HAVING COUNT(*) > 1;\n\n"
         f"✅ Duplicate ID: {dup}  ← this order was placed twice!"
     )
 
