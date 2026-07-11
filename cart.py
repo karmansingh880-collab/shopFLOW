@@ -1,29 +1,23 @@
 # ============================================================
 # cart.py  —  ShopFlow
-# CONCEPT: Duplicate Detection using Math (Sum Formula)
+# CONCEPT: Duplicate Detection using SQL
 #
 # 1. CART: When you add the same product twice, we detect it
 #    and update quantity instead of adding a duplicate row.
 #
-# 2. DUPLICATE ORDER ID FINDER:
-#    Given a list of IDs where exactly ONE is duplicated,
-#    we find it using a math trick (no loops needed!):
+# 2. DUPLICATE ORDER ID FINDER (SQL):
+#    We insert all the entered IDs into a tiny temporary SQLite
+#    table and ask the database itself to find the duplicate:
 #
-#    Formula:
-#      expected_sum = 0 + 1 + 2 + ... + (n-1) = n*(n-1)/2
-#      actual_sum   = sum of all IDs given
-#      duplicate    = actual_sum - expected_sum
+#      SELECT order_id, COUNT(*) FROM orders
+#      GROUP BY order_id
+#      HAVING COUNT(*) > 1;
 #
-#    Example: IDs = [0,1,2,3,2]  → n=5
-#      expected = 4*5/2 = 10
-#      actual   = 0+1+2+3+2 = 8    ← wait, that's wrong direction
-#      Actually: expected = 0+1+2+3+4 = 10, actual = 8? No...
-#
-#    Corrected example: IDs = [1,2,3,2,4]  → n=5
-#      expected = (n-1)*n/2 = 4*5/2 = 10
-#      actual   = 1+2+3+2+4 = 12
-#      duplicate = 12 - 10 = 2  ✓
+#    This is how you'd realistically find duplicates in a real
+#    database full of orders — SQL does the counting for us.
 # ============================================================
+
+import sqlite3
 
 
 class Cart:
@@ -80,21 +74,34 @@ class Cart:
         """Empty the cart."""
         self.items.clear()
 
-    def find_duplicate_id(self, id_list):
+    def find_duplicate_id_sql(self, id_list):
         """
-        Math trick to find the one duplicate in a list of IDs.
+        SQL version of the same duplicate finder.
 
-        Assumes IDs are consecutive starting from 1 (or 0),
-        with exactly one duplicate.
+        Uses an in-memory SQLite database (created fresh each
+        call, thrown away after — no file is saved to disk).
 
         Steps:
-          1. n = total count of IDs
-          2. expected_sum = sum of 1..n-1  (what sum SHOULD be with no duplicate)
-          3. actual_sum = sum of IDs given
-          4. duplicate = actual_sum - expected_sum
+          1. Create a temporary 'orders' table.
+          2. Insert every ID from id_list as a row.
+          3. Run GROUP BY + HAVING COUNT(*) > 1 to find any ID
+             that appears more than once.
+          4. Return the duplicate ID (or None if none found).
         """
-        n = len(id_list)
-        expected_sum = (n - 1) * n // 2   # sum of 0 to n-1
-        actual_sum = sum(id_list)
-        duplicate = actual_sum - expected_sum
-        return duplicate
+        conn = sqlite3.connect(":memory:")   # temporary DB, lives only in RAM
+        conn.execute("CREATE TABLE orders (order_id INTEGER)")
+        conn.executemany(
+            "INSERT INTO orders (order_id) VALUES (?)",
+            [(i,) for i in id_list],
+        )
+
+        cursor = conn.execute(
+            "SELECT order_id, COUNT(*) as times "
+            "FROM orders "
+            "GROUP BY order_id "
+            "HAVING COUNT(*) > 1"
+        )
+        result = cursor.fetchone()   # (order_id, times) or None
+        conn.close()
+
+        return result[0] if result else None
