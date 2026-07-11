@@ -11,7 +11,7 @@
 #   1. 🛍️  Catalog         — view all products
 #   2. 👁️  Recently Viewed — LRU Cache demo
 #   3. 🛒  Cart            — add/remove items, checkout
-#   4. 🔍  Duplicate Finder — math trick for duplicate IDs
+#   4. 🔍  Duplicate Finder — SQL GROUP BY / HAVING
 #   5. 🚚  Delivery Route  — BFS shortest path finder
 # ============================================================
 
@@ -57,7 +57,8 @@ with gr.Blocks(css=CSS, title="ShopFlow") as app:
             gr.Markdown("### All Available Products")
             gr.Markdown(
                 "**Concept used: Polymorphism** — Each product type (Electronics, Clothing, Food) "
-                "has its own `display()` method. Python calls the right one automatically."
+                "has its own `display()` method. Python calls the right one automatically. "
+                "Product data is loaded from `products.csv`."
             )
             catalog_btn = gr.Button("🔄 Load / Refresh Catalog", variant="primary")
             catalog_table = gr.Dataframe(
@@ -122,16 +123,16 @@ with gr.Blocks(css=CSS, title="ShopFlow") as app:
         with gr.Tab("🔍 Duplicate Finder"):
             gr.Markdown("### Duplicate Order ID Detector")
             gr.Markdown(
-                "**Concept used: Sum Formula (Exp 2)** — Given a list of consecutive IDs where "
-                "exactly ONE is duplicated, we find it instantly using math: "
-                "`duplicate = actual_sum − expected_sum`"
+                "**Concept used: SQL** — Given a list of order IDs where one is duplicated, "
+                "we insert them into a temporary SQLite table and run `GROUP BY ... HAVING COUNT(*) > 1` "
+                "to find the duplicate — the same way you'd query a real orders database."
             )
             dup_input = gr.Textbox(
                 label="Enter Order IDs (space-separated, one should be duplicate)",
                 placeholder="e.g. 1 2 3 2 4",
             )
             dup_btn    = gr.Button("🔍 Find Duplicate", variant="primary")
-            dup_output = gr.Textbox(label="Result", lines=5, interactive=False)
+            dup_output = gr.Textbox(label="Result", lines=6, interactive=False)
             dup_btn.click(fn=find_duplicate, inputs=dup_input, outputs=dup_output)
 
         # ════════════════════════════════════════════════════
@@ -157,7 +158,7 @@ with gr.Blocks(css=CSS, title="ShopFlow") as app:
     # ── Footer info ───────────────────────────────────────────
     gr.Markdown(
         "---\n"
-        "**ShopFlow** | Concepts: Polymorphism • LRU Cache • Duplicate Detection • BFS Graph Traversal"
+        "**ShopFlow** | Concepts: Polymorphism • LRU Cache • SQL • BFS Graph Traversal"
     )
 
 # ── Launch ────────────────────────────────────────────────────
