@@ -1,8 +1,10 @@
 # 🛒 ShopFLOW
 
-ShopFLOW is a Python-based e-commerce simulation project that demonstrates the practical implementation of Data Structures, Algorithms, and Object-Oriented Programming concepts through a real-world shopping system.
+[🚀 **Live Demo — Try ShopFLOW**](https://huggingface.co/spaces/KARMAN247001/shopFLOW)
 
-The project provides product management, shopping cart operations, recently viewed products tracking, duplicate order detection, and delivery route optimization through an interactive Gradio web interface.
+ShopFLOW is a Python-based e-commerce simulation project demonstrating
+Data Structures, Algorithms, Object-Oriented Programming, and practical
+software development through an interactive Gradio application.
 
 ---
 
